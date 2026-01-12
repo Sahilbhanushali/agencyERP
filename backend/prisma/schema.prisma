@@ -1,0 +1,47 @@
+generator client {
+  provider = "prisma-client-js"
+
+}
+
+datasource db {
+  provider = "mysql"
+   url      = env("DATABASE_URL")
+}
+
+model User {
+  id          String    @id @default(uuid())
+  email       String    @unique
+  name        String
+  password    String
+  description String?
+  
+  // Relations
+  roleId      String    @map("role_id")
+  role        Role      @relation(fields: [roleId], references: [id], onDelete: Restrict)
+
+  // Timestamps
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt      @map("updated_at")
+  deletedAt   DateTime? @map("deleted_at")
+
+  @@map("sc_users") 
+}
+
+model Role {
+  id          String    @id @default(uuid())
+  name        String    
+  code        String    @unique
+  scope       String   @default("all")
+  status      Boolean   @default(true)
+  description String?
+
+  // Back-relation (One role can have many users)
+  users       User[]
+
+  // Timestamps
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt      @map("updated_at")
+  deletedAt   DateTime? @map("deleted_at")
+
+  @@map("sc_roles") 
+}
