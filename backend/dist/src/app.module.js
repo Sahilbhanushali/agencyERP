@@ -10,17 +10,22 @@ exports.AppModule = void 0;
 const common_1 = require("@nestjs/common");
 const app_controller_1 = require("./app.controller");
 const app_service_1 = require("./app.service");
-const rootuser_module_1 = require("./rootuser/rootuser.module");
 const prisma_module_1 = require("./prisma/prisma.module");
-const auth_module_1 = require("./auth/auth.module");
+const roles_module_1 = require("./roles/roles.module");
+const permissions_controller_1 = require("./permissions/permissions.controller");
+const permissions_service_1 = require("./permissions/permissions.service");
+const permissions_module_1 = require("./permissions/permissions.module");
+const users_module_1 = require("./users/users.module");
+const companies_controller_1 = require("./companies/companies.controller");
+const companies_module_1 = require("./companies/companies.module");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
 exports.AppModule = AppModule = __decorate([
     (0, common_1.Module)({
-        imports: [rootuser_module_1.RootuserModule, prisma_module_1.PrismaModule, auth_module_1.AuthModule],
-        controllers: [app_controller_1.AppController],
-        providers: [app_service_1.AppService],
+        imports: [prisma_module_1.PrismaModule, roles_module_1.RolesModule, permissions_module_1.PermissionsModule, users_module_1.UsersModule, companies_module_1.CompaniesModule],
+        controllers: [app_controller_1.AppController, permissions_controller_1.PermissionsController, companies_controller_1.CompaniesController],
+        providers: [app_service_1.AppService, permissions_service_1.PermissionsService],
     })
 ], AppModule);
 //# sourceMappingURL=app.module.js.map

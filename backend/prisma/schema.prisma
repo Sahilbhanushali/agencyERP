@@ -1,47 +1,147 @@
 generator client {
   provider = "prisma-client-js"
-
 }
 
 datasource db {
   provider = "mysql"
-   url      = env("DATABASE_URL")
+  url      = env("DATABASE_URL")
+}
+
+// --- Enums ---
+
+enum CodeType {
+  SC_SUPER_ADMIN
+  SC_PLATFORM_MANAGER
+  SC_COMPANY_ADMIN
+  SC_MANAGER
+  SC_USER
+  SC_GUEST
+}
+enum RoleType {
+  SUPER_ADMIN
+  PLATFORM_MANAGER
+  COMPANY_ADMIN
+  MANAGER
+  USER
+  GUEST
+}
+
+enum ScopeType {
+  Global
+  Local
+}
+
+enum PermissionType {
+
+  COMPANY_CREATE
+  COMPANY_READ
+  COMPANY_UPDATE
+  COMPANY_DELETE
+  
+
+  USER_CREATE
+  USER_READ
+  USER_UPDATE
+  USER_DELETE
+
+  REPORT_VIEW
+  SYSTEM_SETTINGS
+}
+
+enum EntityStatus {
+  ACTIVE
+  INACTIVE
+  ARCHIVED
+}
+
+// --- Models ---
+
+model Company {
+  id        String       @id @default(uuid())
+  name      String       @db.VarChar(255)
+  status    EntityStatus @default(ACTIVE)
+  
+  users     User[]
+
+  // Metadata & Soft Delete
+  createdAt DateTime     @default(now()) @map("created_at")
+  updatedAt DateTime     @updatedAt @map("updated_at")
+  deletedAt DateTime?    @map("deleted_at")
+  isDeleted Boolean      @default(false) @map("is_deleted")
+
+  @@map("sc_companies")
+  @@index([isDeleted])
 }
 
 model User {
   id          String    @id @default(uuid())
-  email       String    @unique
-  name        String
-  password    String
-  description String?
+  email       String    @unique @db.VarChar(255)
+  name        String    @db.VarChar(100)
+  password    String    @db.VarChar(255)
   
-  // Relations
   roleId      String    @map("role_id")
-  role        Role      @relation(fields: [roleId], references: [id], onDelete: Restrict)
+  companyId   String?   @map("company_id")
 
-  // Timestamps
+  role        Role      @relation(fields: [roleId], references: [id])
+  company     Company?  @relation(fields: [companyId], references: [id])
+  description String? @db.VarChar(255)
+
+  // Metadata & Soft Delete
   createdAt   DateTime  @default(now()) @map("created_at")
-  updatedAt   DateTime  @updatedAt      @map("updated_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
   deletedAt   DateTime? @map("deleted_at")
+  isDeleted   Boolean   @default(true) @map("is_deleted") // Default true if pending verification
 
-  @@map("sc_users") 
+  @@index([companyId])
+  @@index([email, isDeleted])
+  @@map("sc_users")
 }
 
 model Role {
-  id          String    @id @default(uuid())
-  name        String    
-  code        String    @unique
-  scope       String   @default("all")
-  status      Boolean   @default(true)
-  description String?
-
-  // Back-relation (One role can have many users)
+  id          String           @id @default(uuid())
+  name        RoleType         @unique
+  code        CodeType         @unique
+  scope       ScopeType        
+  description String?          @db.VarChar(255)
+  
   users       User[]
+  permissions RolePermission[]
 
-  // Timestamps
-  createdAt   DateTime  @default(now()) @map("created_at")
-  updatedAt   DateTime  @updatedAt      @map("updated_at")
-  deletedAt   DateTime? @map("deleted_at")
+  // Metadata & Soft Delete
+  createdAt   DateTime         @default(now()) @map("created_at")
+  updatedAt   DateTime         @updatedAt @map("updated_at")
+  deletedAt   DateTime?        @map("deleted_at")
+  isDeleted   Boolean          @default(false) @map("is_deleted")
 
-  @@map("sc_roles") 
+  @@map("sc_roles")
+}
+
+model Permission {
+  id          String           @id @default(uuid())
+  code        PermissionType   @unique
+  description String?          @db.VarChar(255)
+
+  roles       RolePermission[]
+
+  // Metadata & Soft Delete
+  createdAt   DateTime         @default(now()) @map("created_at")
+  updatedAt   DateTime         @updatedAt @map("updated_at")
+  deletedAt   DateTime?        @map("deleted_at")
+  isDeleted   Boolean          @default(false) @map("is_deleted")
+
+  @@map("sc_permissions")
+}
+
+model RolePermission {
+  roleId       String @map("role_id")
+  permissionId String @map("permission_id")
+
+  role       Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  // Metadata
+  createdAt    DateTime   @default(now()) @map("created_at")
+
+  @@id([roleId, permissionId])
+  @@map("sc_role_permissions")
 }

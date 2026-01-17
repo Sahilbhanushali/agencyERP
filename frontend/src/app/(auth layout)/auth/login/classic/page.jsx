@@ -11,18 +11,48 @@ import CommonFooter1 from '../../CommonFooter1';
 import jampackImg from '@/assets/img/logo-light.svg';
 import jampackImgDark from '@/assets/img/logo-dark.svg';
 import { useTheme } from '@/layout/theme-provider/theme-provider';
+import { axiosInstance } from "../../../../../utils/Axios.js"
+import { toast } from 'react-toastify';
 
 
 const LoginClassic = () => {
-    const [userName, setUserName] = useState("");
+    const [userEmail, setuserEmail] = useState("");
     const [password, setPassword] = useState("");
     const [showPassword, setShowPassword] = useState(false);
 
     const router = useRouter()
-    const handleSubmit = (e) => {
+
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        router.push("/");
-    }
+
+        try {
+            const response = await axiosInstance({
+                url: "v1/root-user/login",
+                method: "post",
+                data: {
+                    email: userEmail,
+                    password,
+                },
+            });
+
+            toast.success("Login successful", {
+                autoClose: 1000,
+            });
+
+            setTimeout(() => {
+                router.push("/");
+            }, 1000);
+
+        } catch (error) {
+            const message =
+                error?.response?.data?.message || "Login failed";
+
+            toast.error(message, {
+                autoClose: 1500,
+            });
+        }
+    };
+
 
     const { theme } = useTheme();
 
@@ -50,7 +80,7 @@ const LoginClassic = () => {
                                                             <div className="form-label-group">
                                                                 <Form.Label>User Name</Form.Label>
                                                             </div>
-                                                            <Form.Control placeholder="Enter username or email ID" type="text" value={userName} onChange={e => setUserName(e.target.value)} />
+                                                            <Form.Control placeholder="Enter userEmail" type="text" value={userEmail} onChange={e => setuserEmail(e.target.value)} />
                                                         </Col>
                                                         <Col as={Form.Group} lg={12} className="mb-3">
                                                             <div className="form-label-group">
